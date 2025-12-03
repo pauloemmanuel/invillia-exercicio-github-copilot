@@ -46,5 +46,63 @@
     </footer>
 
     <script src="app.js"></script>
+    <script>
+      // Render activities with participants
+      async function loadActivities() {
+        const listEl = document.getElementById('activities-list');
+        const selectEl = document.getElementById('activity');
+        try {
+          const res = await fetch('/activities');
+          if (!res.ok) throw new Error('Failed to load activities');
+          const data = await res.json();
+
+          // Clear containers
+          listEl.innerHTML = '';
+          selectEl.innerHTML = '<option value="">-- Select an activity --</option>';
+
+          Object.entries(data).forEach(([name, info]) => {
+            // Populate select
+            const opt = document.createElement('option');
+            opt.value = name;
+            opt.textContent = name;
+            selectEl.appendChild(opt);
+
+            // Build card
+            const card = document.createElement('div');
+            card.className = 'activity-card';
+            card.innerHTML = `
+              <h4>${name}</h4>
+              <p><strong>Description:</strong> ${info.description}</p>
+              <p><strong>Schedule:</strong> ${info.schedule}</p>
+              <p><strong>Max participants:</strong> ${info.max_participants}</p>
+              <div class="participants">
+                <p><strong>Participants (${info.participants.length}):</strong></p>
+                ${
+                  info.participants.length
+                    ? `<ul class="participants-list">
+                        ${info.participants.map(p => `<li>${p}</li>`).join('')}
+                       </ul>`
+                    : `<p class="participants-empty">No participants yet.</p>`
+                }
+              </div>
+            `;
+            listEl.appendChild(card);
+          });
+        } catch (err) {
+          listEl.innerHTML = '<p class="message error">Could not load activities.</p>';
+          console.error(err);
+        }
+      }
+
+      // Make loadActivities available globally for app.js
+      window.loadActivities = loadActivities;
+
+      // Initial load after DOM is ready
+      if (document.readyState === 'loading') {
+        document.addEventListener('DOMContentLoaded', loadActivities);
+      } else {
+        loadActivities();
+      }
+    </script>
   </body>
 </html>
